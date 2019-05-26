@@ -48,15 +48,15 @@ window.onload=function() {
 <img src="Figure1.tif" alt="Figure 1" width="400" class="center">
 
 <hr>
-<h3><a name="dim"> Indiviual features processing </a></h3>
+<h3><a name="dim"> A) Feature extraction: indiviual features processing </a></h3>
 The subject-wise  extraction of the set of structural features used as input to the Linked-ICA factorization requires the use of different neuroimaging toolboxes,
 i.e. FSL, SPM and freesurfer.<br> 
 
 <ul>
-  <li> <a href="https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/TBSS/UserGuide"> FSL - TBSS pipeline </a> to extract FA, MD and  MO. The TBSS pipeline as we used it
+  <li> To analyse the DWI data we used the <a href="https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/TBSS/UserGuide"> FSL - TBSS pipeline </a> to extract FA, MD and  MO. The TBSS pipeline as we used it
     here reduces to a few commands that we summarize below.<br>
     <ol>
-      <li> run dtifit.
+      <li> run dtifit for each subject.
 	<ul>
 	  <li>  dtifit -k $HCP_500_DIR/$subj/T1w/Diffusion/data.nii.gz -o $SAVE_DIR/$subj/ -m $HCP_500_DIR/$subj/T1w/Diffusion/nodif_brain_mask.nii.gz
 	    -r $HCP_500_DIR/$subj/T1w/Diffusion/bvecs -b $HCP_500_DIR/$subj/T1w/Diffusion/bvals
@@ -72,8 +72,7 @@ i.e. FSL, SPM and freesurfer.<br>
       <li> Follow the instructions and compute MD and MO.
     </ol>
 	  
-  <li> <a href="http://dbm.neuro.uni-jena.de/cat/"> CAT-VBM pipeline </a> to extract gray matter densities using Voxel Based Morphometry (VBM).
-  <li> <a href="https://surfer.nmr.mgh.harvard.edu/fswiki/recon-all"> freesurfer recon-all pipeline </a>  - to extract cortical thickness (CT) and pial area (PA).
+  <li> We used the <a href="https://surfer.nmr.mgh.harvard.edu/fswiki/recon-all"> freesurfer recon-all pipeline </a>  - to extract cortical thickness (CT) and pial area (PA). For each subject we used the T1 available at $HCP_500_DIR/$subj/T1w/T1w_acpc_dc_restore.nii.gz
     <ol>
       <li> mkdir $SAVE_DIR/$subj/
       <li> cp $HCP_500_DIR/$subj/T1w/T1w_acpc_dc_restore.nii.gz $SAVE_DIR/$subj/${subj}_T1w_acpc_dc_restore.nii.gz
@@ -81,11 +80,12 @@ i.e. FSL, SPM and freesurfer.<br>
       <li> recon-all -all -qcache -subjid $subj -sd $SUBJECTS_DIR 
 	
     </ol>
-  <li> directly available at HCP sample - determinants of deformation fields to commone space (JD).
+  <li> We used the same T1s as in the previous step and use the <a href="http://dbm.neuro.uni-jena.de/cat/"> CAT-VBM pipeline </a> to extract gray matter densities using Voxel Based Morphometry (VBM).
+  <li>  Finally, the determinants of the deformation fields to commone space (JD) are directly available for each subject at HCP sample in $HCP_500_DIR/$subj/MNINonLinear/xfms/NonlinearRegJacobians.nii.gz.
 </ul>
 
 <h3><a name="dim"> Subjects feature grouping </a></h3>
-  For each feature, subject-wise images need to be concatenated by adding a new dimension to the images that encondes the subject index.<br> 
+  For each feature, subject-wise images need to be concatenated by adding a new dimension to the images that will enconde the subject index.<br> 
 
 <ul>
   <li>For features encoded as 3-d NIfTI images (VDB, FA, MD, MO, JD), the concatenation into 4-d images is done using <a href="https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Fslutils"> fslmerge </a>. 
@@ -93,7 +93,7 @@ i.e. FSL, SPM and freesurfer.<br>
 </ul>
 
 <h3><a name="dim"> Spatial smooting  </a></h3>
-For computational reasons, spatial smooting is adviced and the results have been shown to do  not be strongly dependent in the smooting [xxx].<br>
+For computational reasons spatial smooting is adviced [Groves et al. 2011].<br>
 In the present work we used isotropic smoothing and it was achieved using  <a href="https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FLIRT"> flirt </a>.  
 
 <ul>
@@ -105,7 +105,7 @@ In the present work we used isotropic smoothing and it was achieved using  <a hr
 
 
 <hr>
-<h3><a name="dim">Linked-ICA </a></h3>
+<h3><a name="dim">B) Linked-ICA </a></h3>
 </p> <b>Linked ICA</b> is the tool in <b>FSL</b> that simultaneously decomposes multiple MRI data
 sets into subject-courses and spatial maps using Bayesian Independent Component Analysis (ICA). <br>
 <ol>
@@ -124,7 +124,7 @@ sets into subject-courses and spatial maps using Bayesian Independent Component 
 
 
 <hr>
-<h3><a name="dim">Post-hoc correlation and statistics </a></h3>
+<h3><a name="dim">(C, D and E) Post-hoc correlation and statistics </a></h3>
 <p> We perform linear correlations between subject loadings and behavioral data and compute statistics using
   <a href="https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/PALM"> PALM. </a> 
 </p>
