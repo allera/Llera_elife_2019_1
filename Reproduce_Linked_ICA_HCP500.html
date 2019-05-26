@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+<!-- Start of Practical boilerplate. -->
+<link rel="stylesheet" type="text/css" href="ICA%20Practical_files/fsl.css">
+<link rel="stylesheet" type="text/css" href="ICA%20Practical_files/quiz.css">
+<link rel="stylesheet" type="text/css" href="ICA%20Practical_files/viz.css">
+
+<script type="text/javascript" src="ICA%20Practical_files/quiz.js"></script>
+<script type="text/javascript" src="ICA%20Practical_files/showhide.js"></script>
+<script type="text/javascript" src="ICA%20Practical_files/viz.js"></script>
+<script type="text/javascript">
+window.onload=function() {
+    setupQuizQuestions();
+    var graphs = document.querySelectorAll(".viz-graph");
+    var parser = new DOMParser;
+    for (var i = 0; i < graphs.length; i++){
+        var div = graphs[i];
+        var dom = parser.parseFromString(div.innerHTML, "text/html");
+        div.innerHTML = Viz(dom.body.textContent);
+        var svg = div.querySelector("svg");
+        svg.setAttribute("width",  "100%");
+    }
+}
+</script>
+<!-- End of Practical boilerplate. -->
+
+
+<title>Linked ICA in HCP500</title>
+</head>
+
+<body>
+<div id="practical">
+<h1 class="centred">Linked ICA in HCP500</h1>
+
+
+<p>This document describes the processing performed in the data from the HCP500 sample as presented in the article
+  <b>"Inter-individual differences in human brain structure and morphometry link to variation in demographics and behavior"</b> (under review by elife).
+  In the article we perform a multi-modal simultaneous factorization of several structural brain features using the Linked-ICA model introduced in [xxx].
+  Here we provide details and code to extract each feature starting from the publicaly available HCP500 sample, perform the Linked-ICA factorization, and
+  perform the correlations to behavioural measures available also form the HCP consortium.For any questions on this document or the process in general please
+  contact Alberto Llera in the email address  a.llera at donders.ru.nl
+  <br>
+  
+    
+    
+<p> 
+
+
+<hr>
+<h3><a name="dim"> Indiviual features processing </a></h3>
+<ul>
+  The subject-wise  extraction of the set of structural features used as input to the factorization requires the use of different neuroimaging toolboxes,
+  i.e. FSL, SPM and freesurfer.<br>
+  <li> <a href="https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/TBSS/UserGuide"> FSL - TBSS pipeline </a> to extract FA, MD and  MO. The TBSS pipeline as we used it
+    here reduces to a few commands that we summarize below.<br>
+    <ol>
+      <li> run dtifit.
+	<ul>
+	  <li>  dtifit -k $HCP_500_DIR/$subj/T1w/Diffusion/data.nii.gz -o $SAVE_DIR/$subj/ -m $HCP_500_DIR/$subj/T1w/Diffusion/nodif_brain_mask.nii.gz
+	    -r $HCP_500_DIR/$subj/T1w/Diffusion/bvecs -b $HCP_500_DIR/$subj/T1w/Diffusion/bvals
+	</ul>
+
+      <li> Folow the instructions at <a href="https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/TBSS/UserGuide"> FSL - TBSS pipeline </a> and process FA images
+	<ul>
+	  <li> tbss_1_preproc *.nii.gz
+	  <li> tbss_2_reg.sh -T
+	  <li> tbss_3_postreg -T
+	  <li> tbss_4_prestats 0.2
+	</ul>
+      <li> Follow the instructions and compute MD and MO.
+    </ol>
+	  
+  <li> <a href="http://dbm.neuro.uni-jena.de/cat/"> CAT-VBM pipeline </a> to extract gray matter densities using Voxel Based Morphometry (VBM).
+  <li> <a href="https://surfer.nmr.mgh.harvard.edu/fswiki/recon-all"> freesurfer recon-all pipeline </a>  - to extract cortical thickness (CT) and pial area (PA).
+    <ol>
+      <li> mkdir $SAVE_DIR/$subj/
+      <li> cp $HCP_500_DIR/$subj/T1w/T1w_acpc_dc_restore.nii.gz $SAVE_DIR/$subj/${subj}_T1w_acpc_dc_restore.nii.gz
+      <li> mri_convert $SUBJECTS_DIR/$subj/*.nii.gz $SUBJECTS_DIR/$subj/001.mgz
+      <li> recon-all -all -qcache -subjid $subj -sd $SUBJECTS_DIR 
+	
+    </ol>
+  <li> directly available at HCP sample - determinants of deformation fields to commone space (JD).
+</ul>
+
+<h3><a name="dim"> Subjects feature grouping </a></h3>
+  For each feature, subject-wise images need to be concatenated by adding a new dimension to the images that encondes the subject index.<br> 
+
+<ul>
+  <li>For features encoded as 3-d NIfTI images (VDB, FA, MD, MO, JD), the concatenation into 4-d images is done using <a href="https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Fslutils"> fslmerge </a>. 
+      <li> For features encoded as 2-D .MGH images (CT and PA), the concatenation into 3-d images is done using <a href="https://surfer.nmr.mgh.harvard.edu/fswiki/mri_concat"> mri_concat </a>.  
+</ul>
+
+<h3><a name="dim"> Spatial smooting  </a></h3>
+For computational reasons, spatial smooting is adviced and the results have been shown to do  not be strongly dependent in the smooting [xxx].<br>
+In the present work we used isotropic smoothing and it was achieved using  <a href="https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FLIRT"> flirt </a>.  
+
+<ul>
+  <li> FA, MD, and MO was downsampled at 2mm isotropic.
+  <li> VBM was downsampled at 4mm isotropic.
+  <li> JD was kept at 2mm isotropic.  
+  <li> PA and CT was keep in fsaverage space.   
+</ul>
+
+
+<hr>
+<h3><a name="dim">Linked-ICA </a></h3>
+</p> <b>Linked ICA</b> is the tool in <b>FSL</b> that simultaneously decomposes multiple MRI data
+sets into subject-courses and spatial maps using Bayesian Independent Component Analysis (ICA). <br>
+<ol>
+  <li> Matlab code implementing the Linked ICA factorization can be found at <a href="https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FLICA"> flica_matlab. </a>
+    <ul>
+      <li> A matlab script to reproduce the main factorization can be found <a href="matlab_Linked_ICA_HCP500.m"> here. </a>
+    </ul>
+  <li> Python code implementing the Linked ICA factorization will be available upon publication at <a href="https://github.com/allera"> flica_python. </a>
+    <ul>
+      <li> A python script to reproduce the main factorization can be found <a href="python_Linked_ICA_HCP500.html"> here. </a>
+    </ul>
+
+</ol>
+</p>
+
+
+
+<hr>
+<h3><a name="dim">Post-hoc correlation and statistics </a></h3>
+<p> We perform linear correlations between subject loadings and behavioral data and compute statistics using
+  <a href="https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/PALM"> PALM. </a> 
+</p>
+
+
+<hr>
+<h3><a name="dim">Linked-ICA </a></h3>
+</p> <b>Flica</b> is the tool in <b>FSL</b> that simultaneously decomposes multiple MRI data
+sets into subject-courses and spatial maps using Bayesian Independent Component Analysis
+(ICA).</p>
+
+<p> The results of such factorization can be used to perform post-hoc statistics to discover relationships to behavioural/demographics/genetic measures.</p>
+
+
+<p>Flica has a simple python based GUI that you can launch by typing in the command line: 
+
+  <pre class="bash"> /home/mrstats/alblle/Python/anaconda2/bin/python /home/mrstats/alblle/Toolboxes/flica_python/FLICA_v1/FLICA_dependences/FLICA_GUI.py</pre></p>
+
+<img src="./figures/Figure1.png" alt="Figure 1" width="800">
+
+
+<p>The GUI will allow you to change some of the most common default options for the
+  preprocessing and the basic options for the final ICA decomposition.</p>
+</p> To get full control over the latter, we must use the command line version (not at this stage):</p>
+
+
+
+<hr>
+<h3><a name="dim">Input brain data directory </a></h3>
+<p>For simplicity of use (both from command line or from GUI),we decided to provide as input to the factorisation an unique folder which MUST contain a subfolder for each input ‘modality’. The data of each input modality should be provided as an unique .nii.gz (nifty) or .txt file or as a pair of .mgh (freesurfer format) files with names starting by lh_ or rh_ to encode left and right hemispheres respectively. </p>
+In all cases, the last dimension of the file MUST encode the subject index. For example, the 4-th dimension of the nii.gz files must be the subject number or the second dimension of the .txt must be the number of subjects.<p>
+
+<p>Use the top "Browse" button to navigate to one of the provided input brain data folders in (/home/mrstats/alblle/Toolboxes/flica_python/FLICA_v1/data/).<p>
+
+<p>  You can also navigate to them from your computer file system to observe the input structure. You can also use flsinfo to check the sizes of the nifty files or gedit to open the .txt files and check the second dimension of the matrices.  </p>
+
+
+<hr>
+<h3><a name="single"> Output directory</a></h3>
+<p>Create manualy a directory in your computer and use the second "Browse" button to let the FLICA code know where do you want to save all results.</p>
+
+
+
+
+
+
+<hr>
+<h3><a name="single"> Model order or number of components</a></h3>
+<p>Usually a number smaller or equal than the number of subjects divided by 4. Nevertheless, exceptions occur where high dimensional factorizations are very interesting.</p>
+
+<p>Type a small number in the corresponding place and click 'save'.</p>
+
+
+
+
+
+
+<hr>
+<h3><a name="single"> Maximum number of iterations </a></h3>
+<p>Maximumm number of iterations allowed if algorithm did not converge before.
+This is a bit tricky. I set it to around 3000 thousands when using real data.There is a threshold for tolerance in convergence (relative free energy change between two consecutive iterations) but, for this model, such tolerance is very much dependent in data and consequently is difficult to set to a fixed value. Convergence can be observed a posteriory looking at F_history in the M.npy</p>
+
+<p>Type a number in the corresponding place and click 'save'.</p>
+
+
+
+<hr>
+<h3><a name="single"> Noise estimation </a></h3>
+<p>Allow for same noise variance for all subjects (Modality wise) or for different noise variance for each subject (Modality & subject wise).</p>
+
+<p>Select one of both (recommended Modality wise).</p>
+
+
+<hr>
+<h3><a name="single"> Path to imaging toolboxes </a></h3>
+<p>Use the 'Browse' buttons to direct to the FSL and FS instalations. (You can just set random paths for the moment)</p>
+
+<hr>
+<h3><a name="single"> Click 'RUN ICA' </a></h3>
+<p> Now you can monitor in the terminal whats going on and its time to wait till you read in the terminal that its done :)</p>
+
+
+<hr>
+<h3><a name="single"> Flica decomposition output </a></h3>
+<p> You can now navigate to your selected output directory and have a look at the output of the data decomposition.</p>
+<p> -M.p file contains all the output of the decomposition. You can load this file into python if you want to but its not necessary now.</p>
+<p> -The order_of_loaded_data.txt contains the indexes in which data was loaded so you know which modality is assigned which index in the rest of the files.</p>
+<p> -order_of_loaded_data.txt contains the indexes in which data was loaded so you know which modality is assigned which index in the rest of the files.</p>
+<p> -niftiOut_mi1XX contains the spatial maps of each modality, indexed as XX, and saved in the same format that was used as input (.nii.gz, .mgh or .txt)<p> 
+<p> -subjectCoursesOut.txt contains the subject loadings and its the relevant file to uncover further statistics to for example behaviour or genetics.<p> 
+<p>-Modality_contributions.txt and PCbars.png contain the same information, namely the relative contribution of each data modality to each component.<p>
+<p>-noiseStdev.png and subjectDominance.png are used to check whether something could go wrong i.e some subject data is an outlyer that should be removed. <p>
+
+
+<hr>
+<h2><a name="single"> Post-hoc correlations </a></h2>
+<p>Type the posthoc correlations tab in the GUI <p>
+  <img src="./figures/Figure2.png" alt="Figure 2" width="800">
+<p> The data input for post-hoc correlation analyses must be a .TXT file and in this case the first dimension encodes the subject index. Although this is the opposite as the input for 
+  Factorisation I consider it easier since .csv files or other formats in which we usually find the behavioural data are ordered in such way. Nevertheless if inputed in the wrong dimension the code will take care of the issue for you (as long as the number of subjects is different from the number of behavioural measures :) ). </p>
+<p> 'Browse' till a .txt file containing behavioural/demographics/genetic data<p> 
+<p> Click "Run posthoc correlations"<p> 
+
+
+
+
+<hr>
+<p class="centred">The End.</p>
+</div>
+
+
+</body></html>
