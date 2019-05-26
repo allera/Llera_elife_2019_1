@@ -37,22 +37,22 @@ window.onload=function() {
 
 <p>This document describes the processing performed in the data from the HCP500 sample as presented in the article
   <b>"Inter-individual differences in human brain structure and morphometry link to variation in demographics and behavior"</b> (under review by elife).
-  In the article we perform a multi-modal simultaneous factorization of several structural brain features using the Linked-ICA model introduced in [xxx].
-  Here we provide details and code to extract each feature starting from the publicaly available HCP500 sample, perform the Linked-ICA factorization, and
-  perform the correlations to behavioural measures available also form the HCP consortium.For any questions on this document or the process in general please
+  In the article we perform a multi-modal simultaneous factorization of several structural brain features using the Linked-ICA model introduced in Groves et al. 2011.
+  After the multi-modal factorization we performed linear correlations using each subject contribution to each component and the  behavioral and demographics measures availabke in the HCP sample. </br>
+  Here we provide details and code to extract each feature starting from the publicaly available HCP500 sample (operation (A)), perform the Linked-ICA factorization (operation (B)),
+  perform the correlations to behavioural measures (operation (C)) available also form the HCP consortium, and perform statistics (operations (D) and (E)). </br>
+  For any questions on this document or the process in general please
   contact Alberto Llera in the email address  a.llera at donders.ru.nl
-  <br>
-  
-    
-    
+  <br>    
 <p> 
-
+<img src="Figure1.tif" alt="Figure 1" width="400" class="center">
 
 <hr>
 <h3><a name="dim"> Indiviual features processing </a></h3>
+The subject-wise  extraction of the set of structural features used as input to the Linked-ICA factorization requires the use of different neuroimaging toolboxes,
+i.e. FSL, SPM and freesurfer.<br> 
+
 <ul>
-  The subject-wise  extraction of the set of structural features used as input to the factorization requires the use of different neuroimaging toolboxes,
-  i.e. FSL, SPM and freesurfer.<br>
   <li> <a href="https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/TBSS/UserGuide"> FSL - TBSS pipeline </a> to extract FA, MD and  MO. The TBSS pipeline as we used it
     here reduces to a few commands that we summarize below.<br>
     <ol>
