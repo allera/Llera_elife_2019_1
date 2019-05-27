@@ -90,8 +90,8 @@ i.e. FSL, SPM and freesurfer.<br>
 <ul>
   <li>For features encoded as 3-d NIfTI images (VDB, FA, MD, MO, JD), the concatenation into 4-d images is done using <a href="https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Fslutils"> fslmerge </a>. 
       <li> For features encoded as 2-D .MGH images (CT and PA), the concatenation into 3-d images is done using <a href="https://surfer.nmr.mgh.harvard.edu/fswiki/mri_concat"> mri_concat </a>.  
-</ul>
 
+</ul>
 <h3><a name="dim"> Spatial smooting  </a></h3>
 For computational reasons spatial smooting is adviced [Groves et al. 2011].<br>
 In the present work we used isotropic smoothing and it was achieved using  <a href="https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FLIRT"> flirt </a>.  
@@ -120,15 +120,39 @@ sets into subject-courses and spatial maps using Bayesian Independent Component 
 
 </ol>
 </p>
+</ul>
+<h3><a name="dim"> The Linked ICA output  </a></h3>
+The output of the Linked ICA factorization is storaged in a folder where we can find: .<br>
 
+<ul>
+  <li> Spatial maps at each component: storaged for each input feature type as .nii.gz or .mgh files
+  <li> Subject loadings to components  are storaged as SubjectsCoursesOut.txt
+  <li> Feature contributions to components are visualized at PCbars.png     
+</ul>
 
 
 <hr>
-<h3><a name="dim">(C, D and E) Post-hoc correlation and statistics </a></h3>
-<p> We perform linear correlations between subject loadings and behavioral data and compute statistics using
+<h3><a name="dim">(C) Post-hoc correlations to behavior </a></h3>
+<p> We perform linear correlations between the subject loadings (SubjectsCoursesOut.txt) and each behavioral measure availabel in the HCP sample.</p>
+
+
+<hr>
+<h3><a name="dim">(D) Permutation Statistics </a></h3>
+<p> We compute statistics using over each of the observed correlation values using 
   <a href="https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/PALM"> PALM. </a> 
 </p>
 
+<hr>
+<h3><a name="dim">(E) Correction for multiple comparisons </a></h3>
+<p> We use FDR correction using the matlab code at 
+  <a href="https://nl.mathworks.com/matlabcentral/fileexchange/27418-fdr_bh"> [Benjamini et al. 1995]. </a> 
+</p>
+
+<hr>
+<h3><a name="dim"> Visualization of spatial maps </a></h3>
+<p> To visualize the spatial maps we use the images in the output  
+  <a href="https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/PALM"> PALM. </a> 
+</p>
 
 </div>
 
