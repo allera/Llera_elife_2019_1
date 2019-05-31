@@ -38,9 +38,9 @@ window.onload=function() {
 <p>This document describes the processing performed in the data from the HCP500 sample as presented in the article
   <b>"Inter-individual differences in human brain structure and morphometry link to variation in demographics and behavior"</b> (under review by elife).
   In the article we perform a multi-modal simultaneous factorization of several structural brain features using the Linked-ICA model introduced in Groves et al. 2011.
-  After the multi-modal factorization we performed linear correlations using each subject contribution to each component and the  behavioral and demographics measures availabke in the HCP sample. </br>
+  After the multi-modal factorization we performed linear correlations using each subject contribution to each component and the  behavioral and demographic measures available in the HCP sample. </br>
   Here we provide details and code to extract each feature starting from the publicaly available HCP500 sample (operation (A)), perform the Linked-ICA factorization (operation (B)),
-  perform the correlations to behavioural measures (operation (C)) available also form the HCP consortium, and perform statistics (operations (D) and (E)). </br>
+  perform the correlations to behavioural measures (operation (C)), and perform statistics (operations (D) and (E)). </br>
   For any questions on this document or the process in general please
   contact Alberto Llera in the email address  a.llera at donders.ru.nl
   <br>    
@@ -92,6 +92,9 @@ i.e. FSL, SPM and freesurfer.<br>
       <li> For features encoded as 2-D .MGH images (CT and PA), the concatenation into 3-d images is done using <a href="https://surfer.nmr.mgh.harvard.edu/fswiki/mri_concat"> mri_concat </a>.  
 
 </ul>
+
+An example script can be found  <a href="./scripts/gather_data/script1_gather_data_4_flica.sh"> here. </a>
+
 <h3><a name="dim"> Spatial smooting  </a></h3>
 For computational reasons spatial smooting is adviced [Groves et al. 2011].<br>
 In the present work we used isotropic smoothing and it was achieved using  <a href="https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FLIRT"> flirt </a>.  
@@ -102,6 +105,10 @@ In the present work we used isotropic smoothing and it was achieved using  <a hr
   <li> JD was kept at 2mm isotropic.  
   <li> PA and CT was keep in fsaverage space.   
 </ul>
+
+
+An example script can be found  <a href="./scripts/downsample_smooth/script2_downsample.sh"> here. </a>
+
 
 
 <hr>
@@ -135,14 +142,11 @@ The output of the Linked ICA factorization is storaged in a folder where we can 
 
 
 <hr>
-<h3><a name="dim">(C) Post-hoc correlations to behavior </a></h3>
-<p> We perform linear correlations between the subject loadings (SubjectsCoursesOut.txt) and each behavioral measure availabel in the HCP sample.</p>
-
-
-<hr>
-<h3><a name="dim">(D) Permutation Statistics </a></h3>
-<p> We compute statistics using over each of the observed correlation values using 
-  <a href="https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/PALM"> PALM. </a> 
+<h3><a name="dim">(C) Post-hoc correlations to behavior and (D) post-hoc statistics </a></h3>
+<p> We used the restricted behavioral data from the HCP sample. Behavioral measures missing for more than a 5% of subjects were not considered. Missing values in the remaining
+  measures were substituted my the mean of the available subjects.<br>
+  We performed linear correlations between the subject loadings (SubjectsCoursesOut.txt) and each behavioral measure availabel and compute statistics using over each of the observed correlation values using 
+  <a href="https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/PALM"> PALM </a>. Instructions to perform the analyses starting with the HCP available data are well detailed in the PALM webpage.
 </p>
 
 <hr>
@@ -157,6 +161,12 @@ The output of the Linked ICA factorization is storaged in a folder where we can 
   <a href="https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslView"> fslview </a>, and for the .mgh files we used
   <a href="https://surfer.nmr.mgh.harvard.edu/fswiki/FreeviewGuide"> freeview </a>. 
 </p>
+
+
+Example scripts can be found at <a href="./scripts/spatial_plots/render_lightbox1.sh"> script1.sh  </a>,  <a href="./scripts/spatial_plots/render_lightbox2.m"> script2.m </a> and <a href="./scripts/spatial_plots/render_lightbox3.sh"> script3.sh </a> </br>
+
+
+
 
 </div>
 
